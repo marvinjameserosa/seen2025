@@ -32,6 +32,8 @@ const joinSchema = z.object({
 export default function RegisterTeamPage() {
     const supabase = createClient()
     const router = useRouter()
+
+    const [inviteCode, setInviteCode] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
 
     const createForm = useForm({
@@ -46,20 +48,28 @@ export default function RegisterTeamPage() {
 
     // Handle team creation
     const onCreate = async (values: z.infer<typeof createSchema>) => {
-        setLoading(true)
-        const { error } = await supabase.rpc('create_team', {
-            team_name: values.teamName,
-            max_size: 5,
-        })
+        setLoading(true);
+        console.log('Creating team with name:', values.teamName);
+        const response = await fetch('/api/create-team', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ teamName: values.teamName }),
+        });
 
-        if (error) {
-            toast.error(`Create failed: ${error.message}`)
+        const result = await response.json();
+
+        if (!response.ok) {
+            toast.error(`Create failed: ${result.error}`);
         } else {
-            toast.success('Team created successfully!')
-            router.push('/')
+            toast.success('Team created successfully!');
+            setInviteCode(result.inviteCode);
         }
-        setLoading(false)
-    }
+
+        setLoading(false);
+    };
+
 
     // Handle joining a team
     const onJoin = async (values: z.infer<typeof joinSchema>) => {
@@ -126,6 +136,20 @@ export default function RegisterTeamPage() {
                     </Button>
                 </form>
             </Form>
+            {inviteCode && (
+                <>
+                    <div className="mt-6 text-center">
+                        <p className="text-lg font-medium">Your Invite Code:</p>
+                        <code className="bg-muted px-3 py-2 rounded-md text-xl tracking-wide">
+                            {inviteCode}
+                        </code>
+                        <p className="text-sm mt-1 text-muted-foreground">Share this code with your teammates so they can join.</p>
+                    </div>
+                    <Button className="mt-4" onClick={() => router.push('/')}>
+                        Continue to Dashboard
+                    </Button>
+                </>
+            )}
         </div>
     )
 }
