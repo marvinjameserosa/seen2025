@@ -27,5 +27,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ message: 'Team created successfully', invite_code: data.invite_code }, { status: 200 });
+    return NextResponse.json({
+        message: 'Team created successfully',
+        invite_code: data,
+    }, { status: 200 });
 }
